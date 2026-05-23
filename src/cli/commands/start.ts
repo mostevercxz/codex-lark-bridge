@@ -1,7 +1,7 @@
 import dns from 'node:dns';
 import { createInterface } from 'node:readline';
 import pkg from '../../../package.json';
-import { ClaudeAdapter } from '../../agent/claude/adapter';
+import { ConfiguredAgentAdapter } from '../../agent/router';
 import { startChannel, type BridgeChannel } from '../../bot/channel';
 import { runRegistrationWizard } from '../../bot/wizard';
 import type { Controls } from '../../commands';
@@ -76,10 +76,12 @@ export async function runStart(opts: StartOptions): Promise<void> {
 
   await preFlightChecks({ skipCheckLarkCli: opts.skipCheckLarkCli });
 
-  const agent = new ClaudeAdapter();
+  let currentCfg = cfg;
+  const agent = new ConfiguredAgentAdapter(() => currentCfg);
   if (!(await agent.isAvailable())) {
-    console.error('✗ 未找到 claude CLI。请先安装 Claude Code：');
-    console.error('  https://docs.anthropic.com/en/docs/claude-code/quickstart');
+    console.error('✗ 未找到可用的本地 agent CLI。请安装并登录 Claude Code 或 Codex CLI。');
+    console.error('  Claude Code: https://docs.anthropic.com/en/docs/claude-code/quickstart');
+    console.error('  Codex CLI:  npm install -g @openai/codex');
     process.exit(1);
   }
 
@@ -173,6 +175,7 @@ export async function runStart(opts: StartOptions): Promise<void> {
         }
         bridge = next_bridge;
         controls.cfg = next;
+        currentCfg = next;
         // Keep the registry in sync so /ps reflects the new app after an
         // /account change. Same process id, new app fields.
         await updateEntry(entry.id, {
@@ -368,4 +371,3 @@ async function persistEncrypted(cfg: AppConfig, configPath: string): Promise<App
   await saveConfig(next, configPath);
   return next;
 }
-

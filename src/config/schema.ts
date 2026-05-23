@@ -1,4 +1,5 @@
 export type TenantBrand = 'feishu' | 'lark';
+export type AgentPreference = 'auto' | 'claude' | 'codex';
 
 /**
  * SecretRef points at a secret stored outside this file — keeps secrets out
@@ -90,6 +91,11 @@ export interface AppAccess {
 }
 
 export interface AppPreferences {
+  /**
+   * Which local coding agent the bridge should run. `auto` prefers Codex
+   * when available and falls back to Claude.
+   */
+  agent?: AgentPreference;
   /** Reply rendering mode for IM (group/p2p) messages. Default 'card'. */
   messageReply?: MessageReplyMode;
   /**
@@ -198,6 +204,13 @@ export function getMessageReplyMode(cfg: AppConfig): MessageReplyMode {
   }
   if (raw === 'card' || raw === 'markdown' || raw === 'text') return raw;
   return 'markdown';
+}
+
+/** Resolve the configured agent. Default `auto` is Codex-first with a Claude fallback. */
+export function getAgentPreference(cfg: AppConfig): AgentPreference {
+  const raw = cfg.preferences?.agent;
+  if (raw === 'claude' || raw === 'codex' || raw === 'auto') return raw;
+  return 'auto';
 }
 
 /** Resolve the show-tool-calls preference with default fallback. */

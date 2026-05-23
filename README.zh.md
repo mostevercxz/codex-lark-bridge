@@ -1,6 +1,6 @@
-# lark-channel-bridge
+# lark-codex-bridge
 
-把飞书 / Lark 消息和本地 Claude Code CLI 打通的轻量 bot，用一条命令起服务，扫码绑应用，在飞书里和 Claude 对话、让它读图 / 改代码。
+把飞书 / Lark 消息和本地 Codex CLI 打通的 Codex-first 轻量 bot，同时保留 Claude Code 支持。用一条命令起服务，扫码绑应用，在飞书里和 agent 对话、让它读图 / 改代码。
 
 [English README](./README.md)
 
@@ -8,32 +8,41 @@
 
 ## 能干什么
 
-- 在飞书（私聊直接发；群里 `@bot`）把消息转给本地的 `claude` CLI，Claude 在你指定的工作目录里工作
-- **流式卡片**：Claude 的文本和工具调用实时出现在同一张卡片上，不用傻等
-- **会话延续**：每个 chat 独立 session，对话能接着上次说
+- 在飞书（私聊直接发；群里 `@bot`）把消息转给本地的 `claude` 或 `codex` CLI，agent 在你指定的工作目录里工作
+- **流式卡片**：agent 的文本和工具调用实时出现在同一张卡片上，不用傻等
+- **会话延续**：每个 chat 独立 agent session，对话能接着上次说
 - **抢占 + 批处理**：中途发新消息会打断旧任务；快速连发几条会合并成一次请求
 - **多工作空间**：`/ws` 切换不同项目，session 自己重置
-- **图片 / 文件**：直接发给 bot，Claude 会读本地下载的文件路径
+- **图片 / 文件**：直接发给 bot，agent 会读本地下载的文件路径
 - **卡片按钮**：`/help` `/ws list` `/status` 返回交互卡片，点按钮直接操作
 
 ## 前置条件
 
 - Node.js **≥ 20**
-- `claude` CLI 已安装并登录：https://docs.anthropic.com/en/docs/claude-code/quickstart
+- 至少安装并登录一个本地 agent CLI：
+  - `claude`：https://docs.anthropic.com/en/docs/claude-code/quickstart
+  - `codex`：`npm install -g @openai/codex`
 - 一个飞书 / Lark PersonalAgent 应用（首次启动的扫码向导能帮你创建）
 
-## 安装
+## 一行启动
 
 ```bash
-npm i -g lark-channel-bridge
-# 或
-pnpm add -g lark-channel-bridge
+npx -y github:<your-github-user>/lark-codex-bridge run
+```
+
+这个项目可以直接从 GitHub 运行，不需要发布到 npm。把 `<your-github-user>` 换成你的 GitHub 用户名或组织名。
+
+如果想全局安装：
+
+```bash
+npm install -g github:<your-github-user>/lark-codex-bridge
+lark-codex-bridge run
 ```
 
 ## 首次启动
 
 ```bash
-lark-channel-bridge run
+lark-codex-bridge run
 ```
 
 第一次跑会检测到没配置应用，**自动进入扫码向导**：
@@ -50,28 +59,28 @@ lark-channel-bridge run
 **进程层**（在你自己的 shell 里直接跑 bridge）:
 
 ```
-lark-channel-bridge run [-c <config>]     前台启动 bot
-lark-channel-bridge ps                    列出本机所有正在跑的 bridge 进程
-lark-channel-bridge kill <id|#>           kill 指定 bridge 进程（SIGTERM，2s 后 SIGKILL）
-lark-channel-bridge --help                列所有命令
+lark-codex-bridge run [-c <config>]       前台启动 bot
+lark-codex-bridge ps                      列出本机所有正在跑的 bridge 进程
+lark-codex-bridge kill <id|#>             kill 指定 bridge 进程（SIGTERM，2s 后 SIGKILL）
+lark-codex-bridge --help                  列所有命令
 ```
 
 **服务层**（让 OS 在后台托管 bridge）:
 
-> ⚠️ **服务层命令必须先全局安装,不能直接用 npx**。daemon 的 launchd plist / systemd unit / Windows 任务里会**硬编码** bridge CLI 的路径;通过 `npx lark-channel-bridge start` 调用时,这条路径在 npm 的临时缓存里(`~/.npm/_npx/<hash>/...`),会被 GC 清掉 — 一旦缓存清理,daemon 就起不来了。请先 `npm install -g lark-channel-bridge`,再 `lark-channel-bridge start`。`bridge run` 用 npx 调用没问题(单次进程)。
+> ⚠️ **服务层命令必须先全局安装,不能直接用 npx**。daemon 的 launchd plist / systemd unit / Windows 任务里会**硬编码** bridge CLI 的路径;通过 `npx ... start` 调用时,这条路径在 npm 的临时缓存里(`~/.npm/_npx/<hash>/...`),会被 GC 清掉。请先 `npm install -g github:<your-github-user>/lark-codex-bridge`,再 `lark-codex-bridge start`。`run` 用 npx 调用没问题(单次前台进程)。
 
 ```
-lark-channel-bridge start                 注册（如需）+ 启动后台 daemon
-lark-channel-bridge stop                  停止 daemon 并关闭开机自启
-lark-channel-bridge restart               重启 daemon
-lark-channel-bridge status                查看 daemon 状态（pid、日志路径、上次退出码）
-lark-channel-bridge unregister            撤销注册（停止 + 删除服务定义文件）
+lark-codex-bridge start                   注册（如需）+ 启动后台 daemon
+lark-codex-bridge stop                    停止 daemon 并关闭开机自启
+lark-codex-bridge restart                 重启 daemon
+lark-codex-bridge status                  查看 daemon 状态（pid、日志路径、上次退出码）
+lark-codex-bridge unregister              撤销注册（停止 + 删除服务定义文件）
 ```
 
 daemon 崩溃会被自动拉起，用户登录时也会自动启动。平台映射:
-- **macOS** → `launchd` 用户代理 `~/Library/LaunchAgents/ai.lark-channel-bridge.bot.plist`
-- **Linux** → `systemd` 用户单元 `~/.config/systemd/user/lark-channel-bridge.bot.service`。要让 daemon 在退出登录后还能跑，执行一次 `loginctl enable-linger $USER`。
-- **Windows** → Task Scheduler 任务 `LarkChannelBridge.Bot`，触发条件为 ONLOGON。启动脚本位于 `~/.lark-channel/daemon-launcher.cmd`。
+- **macOS** → `launchd` 用户代理 `~/Library/LaunchAgents/ai.lark-codex-bridge.bot.plist`
+- **Linux** → `systemd` 用户单元 `~/.config/systemd/user/lark-codex-bridge.bot.service`。要让 daemon 在退出登录后还能跑，执行一次 `loginctl enable-linger $USER`。
+- **Windows** → Task Scheduler 任务 `LarkCodexBridge.Bot`，触发条件为 ONLOGON。启动脚本位于 `~/.lark-channel/daemon-launcher.cmd`。
 
 daemon 的 stdout / stderr 写到 `~/.lark-channel/logs/daemon-stdout.log` 和 `daemon-stderr.log`，跟 bridge 自己的每日结构化日志放在同一个目录。
 
@@ -88,15 +97,17 @@ daemon 的 stdout / stderr 写到 `~/.lark-channel/logs/daemon-stdout.log` 和 `
 | `/ws use <name>` | 切换到命名工作空间 |
 | `/ws remove <name>` | 删除命名工作空间 |
 | `/status` | 当前 cwd / session / agent（卡片 + 按钮） |
-| `/config` | 调整偏好（消息回复方式、工具调用显示等） |
+| `/config` | 调整偏好（agent、消息回复方式、工具调用显示等） |
 | `/stop` | 终止当前正在跑的 run（也可点卡片底部 ⏹ 终止 按钮） |
 | `/timeout [N\|off\|default]` | 当前 session 的 idle 探活（分钟）；`/config` 改全局默认。详见下方"常见问题 — Claude 子进程假死" |
 | `/ps` | 列出本机所有 start 进程，标识当前回复的是哪个 |
 | `/exit <id\|#>` | 终止指定 start 进程（自己 = graceful 退出；他人 = SIGTERM） |
 | `/reconnect` | 强制重连 WebSocket（网络抖动后 bot 没反应时用） |
-| `/doctor [描述]` | 把最近运行日志和你的描述喂给 Claude，自助诊断卡住 / 异常的原因 |
+| `/doctor [描述]` | 把最近运行日志和你的描述喂给当前 agent，自助诊断卡住 / 异常的原因 |
 | `/help` | 帮助卡片 |
-| 其它 `/xxx` | 原样交给 Claude |
+| 其它 `/xxx` | 原样交给当前 agent |
+
+**Agent 选择**：`/config` 可以选择 `自动`、`Codex CLI` 或 `Claude Code`。`自动` 会优先用 Codex，不可用时回退到 Claude。无头/服务部署时，也可以在 `~/.lark-channel/config.json` 里把 `preferences.agent` 设为 `"auto"`、`"codex"` 或 `"claude"`，或通过环境变量 `LARK_CHANNEL_AGENT=codex` 覆盖。
 
 **消息策略**：私聊 = 不需要 @，任何消息都回；**群（含话题群）= 默认要 @bot 才回**（0.1.22 起的新默认），不 @ 时 bot 完全沉默；@全员永远不响应；云文档评论必须 @bot。要恢复"群里也不强制 @"的老行为：`/config` → "群里需要 @ bot" → 选"否"。
 
@@ -105,13 +116,17 @@ daemon 的 stdout / stderr 写到 `~/.lark-channel/logs/daemon-stdout.log` 和 `
 | 路径 | 内容 |
 |---|---|
 | `~/.lark-channel/config.json` | 应用凭据（App ID / Secret），权限 600 |
-| `~/.lark-channel/sessions.json` | 每个 chat / 话题 的 Claude session id + cwd（+ 可选的 `/timeout` 覆盖） |
+| `~/.lark-channel/sessions.json` | 每个 chat / 话题 的 agent session id + cwd（+ 可选的 `/timeout` 覆盖） |
 | `~/.lark-channel/workspaces.json` | 工作空间映射 |
 | `~/.lark-channel/processes.json` | 当前在跑的 start 进程注册中心（`ps`/`stop` 用），死进程会被自动清理 |
 | `~/.lark-channel/media/<chatId>/` | 下载的图片 / 文件，24h 自动清理 |
 | `~/.lark-channel/logs/YYYY-MM-DD.log` | 结构化运行日志（JSON line），按天滚动；启动时清理超过 7 天的老文件（`LARK_CHANNEL_LOG_DAYS` 环境变量可改）；`/doctor` 命令读它做诊断 |
 
-> 升级自 0.1.11 之前的版本？跑一次 `lark-channel-bridge migrate` —— 自动把 `~/.config/lark-channel-bridge/` 和 `~/.cache/lark-channel-bridge/` 下的内容搬到新位置，并把 `config.json` 升级到新结构。
+> 升级自原 bridge 0.1.11 之前的版本？跑一次 `lark-codex-bridge migrate` —— 自动把 `~/.config/lark-channel-bridge/` 和 `~/.cache/lark-channel-bridge/` 下的内容搬到共享的 `~/.lark-channel/` 位置，并把 `config.json` 升级到新结构。
+
+## 隐私
+
+不要提交 `~/.lark-channel/`、`.env`、`.npmrc`、日志、App ID、App Secret、`open_id` 或 `chat_id`。运行时凭据保存在仓库外，App Secret 会加密落盘。
 
 ## 访问控制（可选）
 
@@ -188,11 +203,11 @@ grep '"event":"enter"' ~/.lark-channel/logs/$(date +%Y-%m-%d).log | tail -5
 
 ## 常见问题
 
-**Claude 挂住不回复**：通常是 `claude` CLI 本身没登录，或者 session 指向了不存在的 cwd。发 `/status` 看当前状态；`/new` 重开会话往往就好。
+**agent 挂住不回复**：通常是选中的 CLI 没登录、没安装，或者 session 指向了不存在的 cwd。发 `/status` 看当前状态；`/new` 重开会话往往就好。
 
-**Claude 子进程假死（卡片停在最后一帧不动）**：从 0.1.20 起支持 idle 探活：claude 一段时间没输出就被 SIGTERM kill，卡片末尾会标 "⏱ N 分钟无响应，已自动终止"。默认关闭。开启方式：`/config` 设全局值（分钟），或 `/timeout 10` 只对当前 session 生效；`/timeout off` 关掉某个 session 的探活；`/timeout default` 清掉 session 覆盖回退到全局。
+**agent 子进程假死（卡片停在最后一帧不动）**：从 0.1.20 起支持 idle 探活：agent 一段时间没输出就被 SIGTERM kill，卡片末尾会标 "⏱ N 分钟无响应，已自动终止"。默认关闭。开启方式：`/config` 设全局值（分钟），或 `/timeout 10` 只对当前 session 生效；`/timeout off` 关掉某个 session 的探活；`/timeout default` 清掉 session 覆盖回退到全局。
 
-**图片发过去 Claude 说看不到**：升级到最新版，0.1.0 之前的版本有文件名去重 bug。
+**图片发过去 agent 说看不到**：升级到最新版，0.1.0 之前的版本有文件名去重 bug。
 
 ## 许可
 

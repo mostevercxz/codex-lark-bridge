@@ -7,7 +7,7 @@ import { paths } from '../config/paths';
  * unit name. Single-instance for now; if we ever support multiple bots
  * per machine the suffix can grow `.{appid}` without breaking installs.
  */
-export const SERVICE_NAME = 'lark-channel-bridge.bot';
+export const SERVICE_NAME = 'lark-codex-bridge.bot';
 
 // === macOS launchd ===
 
@@ -39,10 +39,10 @@ export function systemdUnitPath(): string {
 
 /**
  * schtasks task name. Backslashes turn into Task Scheduler "folders" so
- * `LarkChannelBridge\Bot` would create a Bot task under a LarkChannelBridge
+ * `LarkCodexBridge\Bot` would create a Bot task under a LarkCodexBridge
  * folder. We keep it flat for now.
  */
-export const WINDOWS_TASK_NAME = 'LarkChannelBridge.Bot';
+export const WINDOWS_TASK_NAME = 'LarkCodexBridge.Bot';
 
 /**
  * The wrapper .cmd script schtasks invokes. schtasks `/TR` accepts a

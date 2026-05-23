@@ -1,10 +1,10 @@
 {
-  "name": "lark-channel-bridge",
-  "version": "0.1.32",
-  "description": "Bridge Feishu/Lark messenger with local CLI coding agents (Claude Code, ...)",
+  "name": "lark-codex-bridge",
+  "version": "0.1.0",
+  "description": "Codex-first bridge for Feishu/Lark messenger with local CLI coding agents",
   "type": "module",
   "bin": {
-    "lark-channel-bridge": "./bin/lark-channel-bridge.mjs"
+    "lark-codex-bridge": "./bin/lark-codex-bridge.mjs"
   },
   "exports": {
     ".": {
@@ -24,7 +24,8 @@
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "prepublishOnly": "pnpm typecheck && pnpm build"
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run typecheck && npm run build"
   },
   "dependencies": {
     "@clack/prompts": "^1.4.0",
@@ -54,6 +55,7 @@
     "lark",
     "claude",
     "claude-code",
+    "codex",
     "cli",
     "channel",
     "bridge"

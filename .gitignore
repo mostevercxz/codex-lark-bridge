@@ -8,6 +8,8 @@ coverage/
 .env.local
 .env.*.local
 .npmrc
+.lark-channel/
+secrets.enc
 
 .DS_Store
 .idea/

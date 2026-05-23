@@ -12,9 +12,9 @@ export interface ClaudeAdapterOptions {
 
 type ClaudeChild = ChildProcessByStdio<null, Readable, Readable>;
 
-const BRIDGE_SYSTEM_PROMPT = `# lark-channel-bridge 运行约定
+const BRIDGE_SYSTEM_PROMPT = `# lark-codex-bridge 运行约定
 
-你正在 lark-channel-bridge 里跑：把飞书/Lark 用户消息桥到本地 \`claude\` CLI。
+你正在 lark-codex-bridge 里跑：把飞书/Lark 用户消息桥到本地 \`claude\` CLI。
 
 ## bridge_context
 

@@ -74,7 +74,7 @@ export interface StatusInfo {
 
 export function statusCard(info: StatusInfo): object {
   const sessionLine = info.sessionId
-    ? `\`${info.sessionId.slice(0, 8)}…\`${info.sessionStale ? ' ⚠️ 旧 cwd，下一条会新建' : ''}`
+    ? `\`${info.sessionId.slice(0, 8)}…\`${info.sessionStale ? ' ⚠️ 旧 session，下一条会新建' : ''}`
     : '(无)';
   // For topic groups, surface that the scope is per-topic so the user
   // knows /cd / /new only affect this topic.
@@ -160,10 +160,10 @@ export function helpCard(): object {
         '- `/ps` — 列出本机所有 bot,标识当前正在回复的那个',
         '- `/exit <id|#>` — 关掉指定 bot(用 `/ps` 看 id/序号)',
         '- `/reconnect` — 强制重连 WebSocket(网络抖动后 bot 没反应时用)',
-        '- `/doctor [描述]` — 把日志和描述喂给 Claude 自助诊断',
+        '- `/doctor [描述]` — 把日志和描述喂给当前 agent 自助诊断',
         '- `/help` — 本帮助',
         '',
-        '其他内容直接交给 Claude。',
+        '其他内容直接交给当前 agent。',
       ].join('\n'),
     ),
     HR,

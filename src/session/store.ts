@@ -9,6 +9,8 @@ export interface SessionEntry {
   sessionId?: string;
   /** Pinned cwd for the resumable session. Absent for the same reason. */
   cwd?: string;
+  /** Agent that owns the session id. Missing legacy entries are Claude. */
+  agentId?: string;
   updatedAt: number;
   /** Per-scope idle-timeout override (minutes). 0 = explicitly off for this
    * scope, undefined = follow global default. /new clears the whole entry,
@@ -41,6 +43,7 @@ export class SessionStore {
         // the full pair; but a bare timeout override is fine on its own.
         const sessionId = typeof entry.sessionId === 'string' ? entry.sessionId : undefined;
         const cwd = typeof entry.cwd === 'string' ? entry.cwd : undefined;
+        const agentId = typeof entry.agentId === 'string' ? entry.agentId : undefined;
         const idleTimeoutMinutes =
           typeof entry.idleTimeoutMinutes === 'number' ? entry.idleTimeoutMinutes : undefined;
         const hasSession = sessionId !== undefined && cwd !== undefined;
@@ -48,6 +51,7 @@ export class SessionStore {
         this.data[chatId] = {
           ...(sessionId !== undefined ? { sessionId } : {}),
           ...(cwd !== undefined ? { cwd } : {}),
+          ...(agentId !== undefined ? { agentId } : {}),
           updatedAt: entry.updatedAt,
           ...(idleTimeoutMinutes !== undefined ? { idleTimeoutMinutes } : {}),
         };
@@ -63,10 +67,12 @@ export class SessionStore {
    * Sessions recorded in a different cwd are stale — claude can't resume
    * them from a different working directory.
    */
-  resumeFor(chatId: string, cwd: string): string | undefined {
+  resumeFor(chatId: string, cwd: string, agentId = 'claude'): string | undefined {
     const entry = this.data[chatId];
     if (!entry) return undefined;
     if (entry.cwd !== cwd) return undefined;
+    const entryAgent = entry.agentId ?? 'claude';
+    if (entryAgent !== agentId) return undefined;
     return entry.sessionId;
   }
 
@@ -74,13 +80,14 @@ export class SessionStore {
     return this.data[chatId];
   }
 
-  set(chatId: string, sessionId: string, cwd: string): void {
+  set(chatId: string, sessionId: string, cwd: string, agentId = 'claude'): void {
     // Preserve idleTimeoutMinutes across run starts — it's a per-scope
     // preference, not per-run-instance state. /new (clear) wipes it.
     const prev = this.data[chatId];
     this.data[chatId] = {
       sessionId,
       cwd,
+      agentId,
       updatedAt: Date.now(),
       ...(prev?.idleTimeoutMinutes !== undefined
         ? { idleTimeoutMinutes: prev.idleTimeoutMinutes }
