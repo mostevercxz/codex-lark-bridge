@@ -7,8 +7,12 @@ import type { AgentAdapter, AgentRun, AgentRunOptions } from './types';
 type ConcreteAgent = 'claude' | 'codex';
 
 export class ConfiguredAgentAdapter implements AgentAdapter {
-  private readonly claude = new ClaudeAdapter({ binary: process.env.LARK_CHANNEL_CLAUDE_BINARY });
-  private readonly codex = new CodexAdapter({ binary: process.env.LARK_CHANNEL_CODEX_BINARY });
+  private readonly claude = new ClaudeAdapter({
+    binary: process.env.LARK_CODEX_BRIDGE_CLAUDE_BINARY ?? process.env.LARK_CHANNEL_CLAUDE_BINARY,
+  });
+  private readonly codex = new CodexAdapter({
+    binary: process.env.LARK_CODEX_BRIDGE_CODEX_BINARY ?? process.env.LARK_CHANNEL_CODEX_BINARY,
+  });
   private autoResolved: AgentAdapter | undefined;
 
   constructor(private readonly getConfig: () => AppConfig) {}
@@ -50,7 +54,9 @@ export class ConfiguredAgentAdapter implements AgentAdapter {
 }
 
 function getEffectivePreference(cfg: AppConfig): AgentPreference | ConcreteAgent {
-  const fromEnv = process.env.LARK_CHANNEL_AGENT?.trim().toLowerCase();
+  const fromEnv = (process.env.LARK_CODEX_BRIDGE_AGENT ?? process.env.LARK_CHANNEL_AGENT)
+    ?.trim()
+    .toLowerCase();
   if (fromEnv === 'claude' || fromEnv === 'codex' || fromEnv === 'auto') return fromEnv;
   return getAgentPreference(cfg);
 }

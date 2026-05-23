@@ -7,7 +7,7 @@ import { paths } from '../config/paths';
 /** Days of `YYYY-MM-DD.log` history to keep. Override via env. */
 const LOG_RETENTION_DAYS = Math.max(
   1,
-  Number(process.env.LARK_CHANNEL_LOG_DAYS ?? 7) || 7,
+  Number(process.env.LARK_CODEX_BRIDGE_LOG_DAYS ?? process.env.LARK_CHANNEL_LOG_DAYS ?? 7) || 7,
 );
 
 /**
@@ -29,7 +29,7 @@ const STDOUT_INFO_ALLOWLIST = new Set<string>([
  * Structured logger.
  *
  * Two destinations on every call:
- *  1. JSON line into `~/.lark-channel/logs/YYYY-MM-DD.log` — the durable
+ *  1. JSON line into `~/.lark-codex-bridge/logs/YYYY-MM-DD.log` — the durable
  *     record `/doctor` greps over.
  *  2. Compact human-readable line on stdout/stderr — for live tailing in dev.
  *

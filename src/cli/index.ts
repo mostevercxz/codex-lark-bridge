@@ -89,11 +89,11 @@ program
 
 const secrets = program
   .command('secrets')
-  .description('Manage the bridge\'s encrypted secret keystore (~/.lark-channel/secrets.enc)');
+  .description('Manage the bridge\'s encrypted secret keystore (~/.lark-codex-bridge/secrets.enc)');
 
 secrets
   .command('get')
-  .description('Exec-provider protocol: read JSON request from stdin, write JSON response to stdout. Used by lark-cli config bind --source lark-channel.')
+  .description('Exec-provider protocol: read JSON request from stdin, write JSON response to stdout.')
   .action(async () => {
     await runSecretsGet();
   });

@@ -57,7 +57,7 @@ export function windowsLauncherCmdPath(): string {
 
 /**
  * Daemon stdout/stderr go alongside the bridge's own structured logs in
- * `~/.lark-channel/logs/` so users only need to remember one path. Filenames
+ * `~/.lark-codex-bridge/logs/` so users only need to remember one path. Filenames
  * are `daemon-*` to keep them distinct from the rolling per-day JSON files.
  */
 export function daemonLogDir(): string {

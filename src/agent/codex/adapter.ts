@@ -49,7 +49,7 @@ export class CodexAdapter implements AgentAdapter {
     const args = this.buildArgs(opts);
     const child = spawn(this.binary, args, {
       cwd: opts.cwd,
-      env: { ...process.env, LARK_CHANNEL: '1' },
+      env: { ...process.env, LARK_CODEX_BRIDGE: '1', LARK_CHANNEL: '1' },
       stdio: ['pipe', 'pipe', 'pipe'],
     });
 

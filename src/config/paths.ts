@@ -1,7 +1,7 @@
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-const appDir = join(homedir(), '.lark-channel');
+const appDir = process.env.LARK_CODEX_BRIDGE_HOME ?? join(homedir(), '.lark-codex-bridge');
 
 export const paths = {
   appDir,
@@ -25,9 +25,9 @@ export const paths = {
 };
 
 /**
- * Pre-0.1.11 paths (XDG-style). Kept here only so the `migrate` command
- * can detect and move data out of the old location. Don't reference these
- * anywhere in the runtime.
+ * Original lark-channel-bridge paths. Kept only so the `migrate` command can
+ * import old state explicitly; runtime defaults stay isolated in
+ * `~/.lark-codex-bridge` so this project can coexist with Claude bridges.
  */
 export const legacyPaths = {
   appDir: join(

@@ -305,7 +305,7 @@ async function maybeMigratePlaintextSecret(
       );
       await setSecret(secretKeyForApp(cfg.accounts.app.id), s);
       await saveConfig(next, configPath);
-      console.log('🔒 已把 App Secret 加密迁移到 ~/.lark-channel/secrets.enc');
+      console.log('🔒 已把 App Secret 加密迁移到 ~/.lark-codex-bridge/secrets.enc');
       return next;
     } catch (err) {
       log.warn('config', 'migrate-encrypted-failed', {

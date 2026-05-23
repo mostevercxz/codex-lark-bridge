@@ -835,9 +835,9 @@ async function submitAccount(ctx: CommandContext): Promise<void> {
 
     // Encrypted-at-rest path: store the plaintext secret in the AES keystore,
     // and write config.json with an exec-provider SecretRef instead of the
-    // raw secret. lark-cli's `config bind --source lark-channel` reads the
-    // same SecretRef and goes through the exec protocol to retrieve the
-    // plaintext into its own OS keychain — no plaintext on disk.
+    // raw secret. External tooling can read the same SecretRef and go through
+    // the exec protocol to retrieve the plaintext without keeping plaintext
+    // on disk.
     let newCfg: AppConfig;
     try {
       newCfg = await buildEncryptedAccountConfig(

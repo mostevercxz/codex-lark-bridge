@@ -5,8 +5,8 @@ export type AgentPreference = 'auto' | 'claude' | 'codex';
  * SecretRef points at a secret stored outside this file — keeps secrets out
  * of `config.json` so backups / accidental git commits / log dumps don't
  * leak the bot's App Secret. Mirrors openclaw / lark-cli's `SecretRef`
- * shape so lark-cli's `--source lark-channel` reads it through the same
- * generic `ResolveSecretInput` pipeline as openclaw.
+ * shape so external tooling can resolve it through the generic
+ * `ResolveSecretInput` pipeline.
  *
  *   - `env`:  value is in process env at `id` (optionally allowlisted via provider)
  *   - `file`: value is at the path `id` (or `provider.path` if provider config)
@@ -73,7 +73,7 @@ export type MessageReplyMode = 'card' | 'markdown' | 'text';
  * Access control settings. All three lists default to "no restriction" when
  * empty / undefined, so existing deployments are not broken on upgrade.
  * Operators that want a hardened deployment fill these in via
- * `~/.lark-channel/config.json` (no CLI surface yet — by design, since
+ * `~/.lark-codex-bridge/config.json` (no CLI surface yet — by design, since
  * persisting the lists requires the operator to look up open_ids/chat_ids
  * out-of-band anyway).
  */

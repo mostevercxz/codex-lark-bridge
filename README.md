@@ -50,7 +50,7 @@ The first run detects there's no app configured and **opens a QR-code wizard**:
 1. A QR code renders in your terminal.
 2. Scan it with the Feishu / Lark app.
 3. Pick or create a PersonalAgent app.
-4. Credentials are written to `~/.lark-channel/config.json`.
+4. Credentials are written to `~/.lark-codex-bridge/config.json`.
 
 ## Commands
 
@@ -80,9 +80,9 @@ lark-codex-bridge unregister              Remove the service definition and stop
 The daemon auto-restarts on crash and on user login. Platform mapping:
 - **macOS** → `launchd` user agent at `~/Library/LaunchAgents/ai.lark-codex-bridge.bot.plist`
 - **Linux** → `systemd` user unit at `~/.config/systemd/user/lark-codex-bridge.bot.service`. For the daemon to survive logout, run `loginctl enable-linger $USER` once.
-- **Windows** → Task Scheduler task `LarkCodexBridge.Bot`, triggered ONLOGON. Launcher script at `~/.lark-channel/daemon-launcher.cmd`.
+- **Windows** → Task Scheduler task `LarkCodexBridge.Bot`, triggered ONLOGON. Launcher script at `~/.lark-codex-bridge/daemon-launcher.cmd`.
 
-Daemon logs go to `~/.lark-channel/logs/daemon-stdout.log` and `daemon-stderr.log` alongside the bridge's per-day structured logs.
+Daemon logs go to `~/.lark-codex-bridge/logs/daemon-stdout.log` and `daemon-stderr.log` alongside the bridge's per-day structured logs.
 
 > When the same app is started multiple times, Lark's open platform routes events to one of the live WebSocket connections at random. `run` detects existing processes for the same app and (in a TTY) prompts: `[c]ontinue / [k]ill old / [a]bort`. In non-TTY mode it warns and continues.
 
@@ -107,7 +107,9 @@ Daemon logs go to `~/.lark-channel/logs/daemon-stdout.log` and `daemon-stderr.lo
 | `/help` | Help card |
 | Any other `/xxx` | Forwarded verbatim to the current agent |
 
-**Agent selection**: `/config` can choose `auto`, `Codex CLI`, or `Claude Code`. `auto` prefers Codex when available and falls back to Claude. For headless/service setup, set `preferences.agent` in `~/.lark-channel/config.json` to `"auto"`, `"codex"`, or `"claude"`, or set `LARK_CHANNEL_AGENT=codex` in the environment.
+**Agent selection**: `/config` can choose `auto`, `Codex CLI`, or `Claude Code`. `auto` prefers Codex when available and falls back to Claude. For headless/service setup, set `preferences.agent` in `~/.lark-codex-bridge/config.json` to `"auto"`, `"codex"`, or `"claude"`, or set `LARK_CODEX_BRIDGE_AGENT=codex` in the environment.
+
+**Running beside the original Claude bridge**: this project stores its runtime state in `~/.lark-codex-bridge/`, separate from the original bridge's `~/.lark-channel/`. Use a separate Feishu/Lark PersonalAgent app for each bridge; the Lark open platform does not reliably deliver events when two live WebSocket connections use the same app credentials.
 
 **Reply policy**: in a DM, the bot replies to anything. In a **group (including topic groups), the bot only replies when `@`-mentioned** (default since 0.1.22); unmentioned messages are ignored. `@all` is never answered. Cloud-doc comments must mention the bot. To restore the older "always answer in groups" behaviour: `/config` → "Require @bot in groups" → No.
 
@@ -115,18 +117,18 @@ Daemon logs go to `~/.lark-channel/logs/daemon-stdout.log` and `daemon-stderr.lo
 
 | Path | Content |
 |---|---|
-| `~/.lark-channel/config.json` | App credentials (App ID / Secret), mode 600 |
-| `~/.lark-channel/sessions.json` | Agent session id + cwd per chat / topic (+ optional `/timeout` override) |
-| `~/.lark-channel/workspaces.json` | Named-workspace map |
-| `~/.lark-channel/processes.json` | Process registry for live `start` instances (used by `ps`/`stop`); dead PIDs are auto-pruned |
-| `~/.lark-channel/media/<chatId>/` | Downloaded images / files, cleaned up after 24h |
-| `~/.lark-channel/logs/YYYY-MM-DD.log` | Structured run logs (JSONL), rotated daily; older than 7 days are pruned at startup (`LARK_CHANNEL_LOG_DAYS` env var overrides). `/doctor` reads these. |
+| `~/.lark-codex-bridge/config.json` | App credentials (App ID / Secret), mode 600 |
+| `~/.lark-codex-bridge/sessions.json` | Agent session id + cwd per chat / topic (+ optional `/timeout` override) |
+| `~/.lark-codex-bridge/workspaces.json` | Named-workspace map |
+| `~/.lark-codex-bridge/processes.json` | Process registry for live `start` instances (used by `ps`/`stop`); dead PIDs are auto-pruned |
+| `~/.lark-codex-bridge/media/<chatId>/` | Downloaded images / files, cleaned up after 24h |
+| `~/.lark-codex-bridge/logs/YYYY-MM-DD.log` | Structured run logs (JSONL), rotated daily; older than 7 days are pruned at startup (`LARK_CODEX_BRIDGE_LOG_DAYS` env var overrides). `/doctor` reads these. |
 
-> Upgrading from the original bridge before 0.1.11? Run `lark-codex-bridge migrate` once — it moves anything under `~/.config/lark-channel-bridge/` and `~/.cache/lark-channel-bridge/` to the shared `~/.lark-channel/` location and upgrades `config.json` to the new schema.
+> Upgrading from the original bridge before 0.1.11? Run `lark-codex-bridge migrate` once only if you intentionally want to import that old state into this Codex bridge. By default, this project keeps its own state under `~/.lark-codex-bridge/`.
 
 ## Privacy
 
-Do not commit `~/.lark-channel/`, `.env`, `.npmrc`, logs, app IDs, app secrets, `open_id`s, or `chat_id`s. Runtime credentials are stored outside the repo and app secrets are encrypted at rest.
+Do not commit `~/.lark-codex-bridge/`, `~/.lark-channel/`, `.env`, `.npmrc`, logs, app IDs, app secrets, `open_id`s, or `chat_id`s. Runtime credentials are stored outside the repo and app secrets are encrypted at rest.
 
 ## Access control (optional)
 
@@ -169,7 +171,7 @@ Fill all three. The `/config` form catches common mistakes — e.g. if your admi
 Easiest path: have the target user send the bot a message (or `@`-mention it in the target group), then in your terminal:
 
 ```bash
-grep '"event":"enter"' ~/.lark-channel/logs/$(date +%Y-%m-%d).log | tail -5
+grep '"event":"enter"' ~/.lark-codex-bridge/logs/$(date +%Y-%m-%d).log | tail -5
 ```
 
 Every line carries `chatId` (group or DM id) and `senderId` (the user's `open_id`). Copy them from there.
@@ -185,7 +187,7 @@ The Feishu open-platform "Get user info" API also works but needs the `contact:u
 
 ### Advanced: editing the config file directly
 
-The `/config` form writes to `~/.lark-channel/config.json` under `preferences.access`:
+The `/config` form writes to `~/.lark-codex-bridge/config.json` under `preferences.access`:
 
 ```json
 {

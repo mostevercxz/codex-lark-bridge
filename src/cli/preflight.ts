@@ -2,21 +2,18 @@ import { spawn, spawnSync } from 'node:child_process';
 import * as p from '@clack/prompts';
 
 const INSTALL_TIMEOUT_MS = 5 * 60 * 1000;
-const BIND_TIMEOUT_MS = 30 * 1000;
-
 const BOLD = '\x1b[1m';
 const RESET = '\x1b[0m';
 
 const MANUAL_INSTALL_HINT = [
   '手动安装命令:',
   `  ${BOLD}npm install -g @larksuite/cli${RESET}`,
-  `  ${BOLD}lark-cli config bind --source lark-channel --identity bot-only${RESET}`,
   '',
   '完整文档: https://github.com/larksuite/cli',
 ].join('\n');
 
 export interface PreFlightOptions {
-  /** Skip lark-cli auto-install + bind. */
+  /** Skip lark-cli auto-install. */
   skipCheckLarkCli?: boolean;
   // Future: skipCheckXxx?: boolean;
 }
@@ -72,27 +69,7 @@ async function checkLarkCli(opts: PreFlightOptions): Promise<void> {
   }
   sInstall.stop('Installed');
 
-  // Step 2: bind
-  const sBind = p.spinner();
-  sBind.start('Binding to bridge credentials');
-  const bindResult = await runCapture(
-    'lark-cli',
-    ['config', 'bind', '--source', 'lark-channel', '--identity', 'bot-only'],
-    BIND_TIMEOUT_MS,
-  );
-  if (!bindResult.success) {
-    sBind.error('Bind failed');
-    if (bindResult.output.trim()) {
-      console.log(bindResult.output);
-    }
-    p.outro('lark-cli 已装,但自动 bind 失败');
-    console.log(
-      `请手动执行:\n  ${BOLD}lark-cli config bind --source lark-channel --identity bot-only${RESET}\n`,
-    );
-    return;
-  }
-  sBind.stop('Bound');
-  p.outro('Done');
+  p.outro('lark-cli 已安装。bridge 本身可以直接运行；如需在 agent 内主动调用飞书 API,请按 lark-cli 文档单独配置。');
 }
 
 function printInstallFailedWarning(): void {
@@ -109,7 +86,6 @@ function printInstallFailedWarning(): void {
       '请手动执行:',
       '',
       `  ${BOLD}npm install -g @larksuite/cli${RESET}`,
-      `  ${BOLD}lark-cli config bind --source lark-channel --identity bot-only${RESET}`,
       '',
       '完整文档: https://github.com/larksuite/cli',
       '装完之后无需重启 bridge(它只在启动时检测一次)。',
@@ -139,7 +115,7 @@ interface RunResult {
 /**
  * Run a child process, capture stdout/stderr to a buffer (keeps the
  * surrounding clack spinner UI clean), enforce a timeout. Used for the
- * npm install and lark-cli bind steps in the preflight check.
+ * npm install step in the preflight check.
  */
 async function runCapture(
   cmd: string,

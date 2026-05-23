@@ -136,7 +136,7 @@ export class ClaudeAdapter implements AgentAdapter {
 
     const child = spawn(this.binary, args, {
       cwd: opts.cwd,
-      env: { ...process.env, LARK_CHANNEL: '1' },
+      env: { ...process.env, LARK_CODEX_BRIDGE: '1', LARK_CHANNEL: '1' },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 

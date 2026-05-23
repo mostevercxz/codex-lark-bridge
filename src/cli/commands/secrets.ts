@@ -12,7 +12,7 @@ import { getSecret, listSecretIds, removeSecret, setSecret } from '../../config/
  *    protocol): `lark-codex-bridge secrets get` reads a JSON-RPC request
  *    from stdin and writes the decrypted secret to stdout. This is what
  *    `accounts.app.secret = { source: "exec", ... }` resolves through when
- *    lark-cli binds against ~/.lark-channel/config.json.
+ *    lark-cli binds against the bridge config.
  */
 
 interface ExecRequest {
@@ -84,7 +84,7 @@ export async function runSecretsSet(appId: string | undefined): Promise<void> {
     process.exit(1);
   }
   await setSecret(id, plaintext);
-  console.log(`✓ 已加密存到 ~/.lark-channel/secrets.enc`);
+  console.log(`✓ 已加密存到 ~/.lark-codex-bridge/secrets.enc`);
 }
 
 export async function runSecretsList(): Promise<void> {

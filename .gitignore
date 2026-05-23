@@ -9,6 +9,7 @@ coverage/
 .env.*.local
 .npmrc
 .lark-channel/
+.lark-codex-bridge/
 secrets.enc
 
 .DS_Store
