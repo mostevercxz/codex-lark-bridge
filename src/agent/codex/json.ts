@@ -72,6 +72,15 @@ export function* translateEvent(raw: unknown): Generator<AgentEvent> {
   }
 
   if (evt.type === 'error') {
-    yield { type: 'error', message: evt.message ?? 'codex returned an error' };
+    const message = evt.message ?? 'codex returned an error';
+    if (isRetryNotice(message)) return;
+    yield { type: 'error', message };
   }
+}
+
+function isRetryNotice(message: string): boolean {
+  return (
+    /^Reconnecting\.\.\. \d+\/\d+ \(stream disconnected before completion: .+\)$/.test(message) ||
+    /^stream disconnected - retrying sampling request \(.+\)\.\.\.$/.test(message)
+  );
 }
